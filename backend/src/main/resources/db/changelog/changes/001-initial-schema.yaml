@@ -1,0 +1,203 @@
+databaseChangeLog:
+  - changeSet:
+      id: 001-initial-schema
+      author: codex
+      preConditions:
+        - onFail: MARK_RAN
+        - onError: MARK_RAN
+        - not:
+            tableExists:
+              tableName: _user
+      changes:
+        - createTable:
+            tableName: _user
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: firstname
+                  type: VARCHAR(100)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: lastname
+                  type: VARCHAR(100)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: email
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: password
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: role
+                  type: VARCHAR(20)
+                  constraints:
+                    nullable: false
+        - addUniqueConstraint:
+            tableName: _user
+            columnNames: email
+            constraintName: uk_user_email
+        - createTable:
+            tableName: rooms
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: room_number
+                  type: VARCHAR(50)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: room_type
+                  type: VARCHAR(50)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: price_per_night
+                  type: DOUBLE PRECISION
+                  constraints:
+                    nullable: false
+              - column:
+                  name: capacity
+                  type: INTEGER
+                  constraints:
+                    nullable: false
+        - addUniqueConstraint:
+            tableName: rooms
+            columnNames: room_number
+            constraintName: uk_room_room_number
+        - createTable:
+            tableName: features
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: name
+                  type: VARCHAR(100)
+                  constraints:
+                    nullable: false
+        - addUniqueConstraint:
+            tableName: features
+            columnNames: name
+            constraintName: uk_feature_name
+        - createTable:
+            tableName: room_features
+            columns:
+              - column:
+                  name: room_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: feature_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+        - addPrimaryKey:
+            tableName: room_features
+            columnNames: room_id, feature_id
+            constraintName: pk_room_features
+        - addForeignKeyConstraint:
+            baseTableName: room_features
+            baseColumnNames: room_id
+            referencedTableName: rooms
+            referencedColumnNames: id
+            constraintName: fk_room_features_room
+            onDelete: CASCADE
+        - addForeignKeyConstraint:
+            baseTableName: room_features
+            baseColumnNames: feature_id
+            referencedTableName: features
+            referencedColumnNames: id
+            constraintName: fk_room_features_feature
+            onDelete: CASCADE
+        - createTable:
+            tableName: bookings
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: user_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: room_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: start_date
+                  type: DATE
+                  constraints:
+                    nullable: false
+              - column:
+                  name: end_date
+                  type: DATE
+                  constraints:
+                    nullable: false
+              - column:
+                  name: status
+                  type: VARCHAR(20)
+                  constraints:
+                    nullable: false
+        - addForeignKeyConstraint:
+            baseTableName: bookings
+            baseColumnNames: user_id
+            referencedTableName: _user
+            referencedColumnNames: id
+            constraintName: fk_bookings_user
+        - addForeignKeyConstraint:
+            baseTableName: bookings
+            baseColumnNames: room_id
+            referencedTableName: rooms
+            referencedColumnNames: id
+            constraintName: fk_bookings_room
+        - sql:
+            sql: ALTER TABLE bookings ADD CONSTRAINT ck_bookings_date_range CHECK (start_date <= end_date)
+        - sql:
+            sql: ALTER TABLE bookings ADD CONSTRAINT ck_bookings_status CHECK (status in ('ACTIVE','CANCELLED','COMPLETED'))
+        - createIndex:
+            tableName: bookings
+            indexName: idx_bookings_room_date_status
+            columns:
+              - column:
+                  name: room_id
+              - column:
+                  name: start_date
+              - column:
+                  name: end_date
+              - column:
+                  name: status
+        - createIndex:
+            tableName: bookings
+            indexName: idx_bookings_user_id
+            columns:
+              - column:
+                  name: user_id

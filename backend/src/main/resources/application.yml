@@ -1,0 +1,38 @@
+server:
+  port: 8081 # <-- Change this number!
+
+spring:
+  config:
+    import: optional:file:.env[.properties]
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+  liquibase:
+    enabled: true
+    change-log: classpath:db/changelog/db.changelog-master.yaml
+
+application:
+  cors:
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:3000}
+    allowed-methods: ${CORS_ALLOWED_METHODS:GET,POST,PUT,DELETE,PATCH,OPTIONS}
+    allowed-headers: ${CORS_ALLOWED_HEADERS:Authorization,Content-Type}
+  security:
+    rate-limit:
+      auth:
+        max-attempts: ${AUTH_RATE_LIMIT_MAX_ATTEMPTS:10}
+        window-seconds: ${AUTH_RATE_LIMIT_WINDOW_SECONDS:60}
+    jwt:
+      secret-key: ${JWT_SECRET_KEY}
+      expiration: ${JWT_EXPIRATION:86400000} # 24 hours
+      issuer: ${JWT_ISSUER:hotel-booking-platform}
+      audience: ${JWT_AUDIENCE:hotel-booking-api}

@@ -1,0 +1,182 @@
+@host = http://localhost:8081
+@customerEmail = customer@example.com
+@customerPassword = Password123!
+@adminEmail = admin@example.com
+@adminPassword = Password123!
+@customerToken = REPLACE_WITH_CUSTOMER_TOKEN
+@adminToken = REPLACE_WITH_ADMIN_TOKEN
+@roomId = 1
+@bookingId = 1
+@userId = 1
+
+### AUTH - Register customer
+POST {{host}}/api/auth/register
+Content-Type: application/json
+
+{
+  "firstname": "Customer",
+  "lastname": "User",
+  "email": "{{customerEmail}}",
+  "password": "{{customerPassword}}"
+}
+
+### AUTH - Login customer
+# Copy token from response into @customerToken
+POST {{host}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "{{customerEmail}}",
+  "password": "{{customerPassword}}"
+}
+
+### AUTH - Login admin
+# Requires an existing ADMIN user in DB. Copy token into @adminToken.
+POST {{host}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "{{adminEmail}}",
+  "password": "{{adminPassword}}"
+}
+
+### USERS - Get current profile
+GET {{host}}/api/users/me
+Authorization: Bearer {{customerToken}}
+
+### USERS - Update current profile
+PUT {{host}}/api/users/profile
+Content-Type: application/json
+Authorization: Bearer {{customerToken}}
+
+{
+  "firstname": "CustomerUpdated",
+  "lastname": "UserUpdated",
+  "email": "customer.updated@example.com",
+  "password": "Password123!"
+}
+
+### USERS (ADMIN) - Create user
+POST {{host}}/api/users
+Content-Type: application/json
+Authorization: Bearer {{adminToken}}
+
+{
+  "firstname": "New",
+  "lastname": "User",
+  "email": "new.user@example.com",
+  "password": "Password123!",
+  "role": "CUSTOMER"
+}
+
+### USERS (ADMIN) - List users
+GET {{host}}/api/users
+Authorization: Bearer {{adminToken}}
+
+### USERS (ADMIN) - Get user by id
+GET {{host}}/api/users/{{userId}}
+Authorization: Bearer {{adminToken}}
+
+### USERS (ADMIN) - Update user by id
+PUT {{host}}/api/users/{{userId}}
+Content-Type: application/json
+Authorization: Bearer {{adminToken}}
+
+{
+  "firstname": "AdminUpdated",
+  "lastname": "UserUpdated",
+  "email": "admin.updated@example.com",
+  "password": "Password123!"
+}
+
+### USERS (ADMIN) - Update user role
+PUT {{host}}/api/users/{{userId}}/role
+Content-Type: application/json
+Authorization: Bearer {{adminToken}}
+
+{
+  "role": "ADMIN"
+}
+
+### USERS (ADMIN) - Delete user
+DELETE {{host}}/api/users/{{userId}}
+Authorization: Bearer {{adminToken}}
+
+### ROOMS - List rooms (paginated, sortable)
+GET {{host}}/api/rooms?page=0&size=10&sort=id,asc
+Authorization: Bearer {{customerToken}}
+
+### ROOMS - List rooms filtered by type
+GET {{host}}/api/rooms?roomType=Deluxe&page=0&size=10&sort=pricePerNight,desc
+Authorization: Bearer {{customerToken}}
+
+### ROOMS - Get room by id
+GET {{host}}/api/rooms/{{roomId}}
+Authorization: Bearer {{customerToken}}
+
+### ROOMS - Search available rooms
+GET {{host}}/api/rooms/search?startDate=2026-06-10&endDate=2026-06-15&roomType=Deluxe&capacity=2
+Authorization: Bearer {{customerToken}}
+
+### ROOMS (ADMIN) - Create room
+POST {{host}}/api/rooms
+Content-Type: application/json
+Authorization: Bearer {{adminToken}}
+
+{
+  "roomNumber": "501",
+  "roomType": "Deluxe",
+  "pricePerNight": 220.0,
+  "capacity": 2,
+  "features": [
+    {
+      "name": "WiFi"
+    },
+    {
+      "name": "Air Conditioning"
+    }
+  ]
+}
+
+### ROOMS (ADMIN) - Update room
+PUT {{host}}/api/rooms/{{roomId}}
+Content-Type: application/json
+Authorization: Bearer {{adminToken}}
+
+{
+  "roomNumber": "501",
+  "roomType": "Deluxe",
+  "pricePerNight": 245.0,
+  "capacity": 3,
+  "features": [
+    {
+      "name": "WiFi"
+    },
+    {
+      "name": "Balcony"
+    }
+  ]
+}
+
+### ROOMS (ADMIN) - Delete room
+DELETE {{host}}/api/rooms/{{roomId}}
+Authorization: Bearer {{adminToken}}
+
+### BOOKINGS - Create booking
+POST {{host}}/api/bookings
+Content-Type: application/json
+Authorization: Bearer {{customerToken}}
+
+{
+  "roomId": {{roomId}},
+  "startDate": "2026-06-20",
+  "endDate": "2026-06-25"
+}
+
+### BOOKINGS - Get my bookings
+GET {{host}}/api/bookings/my
+Authorization: Bearer {{customerToken}}
+
+### BOOKINGS - Cancel booking
+DELETE {{host}}/api/bookings/{{bookingId}}
+Authorization: Bearer {{customerToken}}

@@ -1,0 +1,146 @@
+databaseChangeLog:
+  - changeSet:
+      id: 002-create-revoked-tokens
+      author: codex
+      preConditions:
+        - onFail: MARK_RAN
+        - onError: MARK_RAN
+        - not:
+            tableExists:
+              tableName: revoked_tokens
+      changes:
+        - createTable:
+            tableName: revoked_tokens
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: jti
+                  type: VARCHAR(100)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: revoked_at
+                  type: TIMESTAMP
+                  constraints:
+                    nullable: false
+              - column:
+                  name: expires_at
+                  type: TIMESTAMP
+                  constraints:
+                    nullable: false
+        - addUniqueConstraint:
+            tableName: revoked_tokens
+            columnNames: jti
+            constraintName: uk_revoked_tokens_jti
+        - createIndex:
+            tableName: revoked_tokens
+            indexName: idx_revoked_tokens_expires_at
+            columns:
+              - column:
+                  name: expires_at
+  - changeSet:
+      id: 002-rooms-room-number-unique
+      author: codex
+      preConditions:
+        - onFail: MARK_RAN
+        - onError: MARK_RAN
+        - sqlCheck:
+            expectedResult: "0"
+            sql: SELECT COUNT(*) FROM (SELECT room_number FROM rooms GROUP BY room_number HAVING COUNT(*) > 1) AS duplicates
+        - not:
+            uniqueConstraintExists:
+              tableName: rooms
+              constraintName: uk_room_room_number
+      changes:
+        - addUniqueConstraint:
+            tableName: rooms
+            columnNames: room_number
+            constraintName: uk_room_room_number
+  - changeSet:
+      id: 002-features-name-unique
+      author: codex
+      preConditions:
+        - onFail: MARK_RAN
+        - onError: MARK_RAN
+        - sqlCheck:
+            expectedResult: "0"
+            sql: SELECT COUNT(*) FROM (SELECT name FROM features GROUP BY name HAVING COUNT(*) > 1) AS duplicates
+        - not:
+            uniqueConstraintExists:
+              tableName: features
+              constraintName: uk_feature_name
+      changes:
+        - addUniqueConstraint:
+            tableName: features
+            columnNames: name
+            constraintName: uk_feature_name
+  - changeSet:
+      id: 002-bookings-check-date-range
+      author: codex
+      preConditions:
+        - onFail: MARK_RAN
+        - onError: MARK_RAN
+        - sqlCheck:
+            expectedResult: "0"
+            sql: SELECT COUNT(*) FROM pg_constraint WHERE conname = 'ck_bookings_date_range'
+      changes:
+        - sql:
+            sql: ALTER TABLE bookings ADD CONSTRAINT ck_bookings_date_range CHECK (start_date <= end_date)
+  - changeSet:
+      id: 002-bookings-check-status
+      author: codex
+      preConditions:
+        - onFail: MARK_RAN
+        - onError: MARK_RAN
+        - sqlCheck:
+            expectedResult: "0"
+            sql: SELECT COUNT(*) FROM pg_constraint WHERE conname = 'ck_bookings_status'
+      changes:
+        - sql:
+            sql: ALTER TABLE bookings ADD CONSTRAINT ck_bookings_status CHECK (status in ('ACTIVE','CANCELLED','COMPLETED'))
+  - changeSet:
+      id: 002-bookings-room-date-status-index
+      author: codex
+      preConditions:
+        - onFail: MARK_RAN
+        - onError: MARK_RAN
+        - not:
+            indexExists:
+              indexName: idx_bookings_room_date_status
+              tableName: bookings
+      changes:
+        - createIndex:
+            tableName: bookings
+            indexName: idx_bookings_room_date_status
+            columns:
+              - column:
+                  name: room_id
+              - column:
+                  name: start_date
+              - column:
+                  name: end_date
+              - column:
+                  name: status
+  - changeSet:
+      id: 002-bookings-user-id-index
+      author: codex
+      preConditions:
+        - onFail: MARK_RAN
+        - onError: MARK_RAN
+        - not:
+            indexExists:
+              indexName: idx_bookings_user_id
+              tableName: bookings
+      changes:
+        - createIndex:
+            tableName: bookings
+            indexName: idx_bookings_user_id
+            columns:
+              - column:
+                  name: user_id
