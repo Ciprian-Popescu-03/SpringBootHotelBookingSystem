@@ -3,6 +3,10 @@ package com.hotelbooking.platform.controllers;
 import com.hotelbooking.platform.dto.request.RoomRequestDto;
 import com.hotelbooking.platform.dto.response.RoomResponseDto;
 import com.hotelbooking.platform.services.RoomService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -16,6 +20,7 @@ import org.springframework.web.bind.annotation.*;
 import java.time.LocalDate;
 import java.util.List;
 
+@Tag(name = "Rooms", description = "Room management endpoints")
 @RestController
 @RequestMapping(path = "/api/rooms")
 public class RoomController {
@@ -61,7 +66,12 @@ public class RoomController {
         return ResponseEntity.noContent().build();
     }
 
-    @GetMapping("/search")
+    @Operation(summary = "Get all available rooms")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Rooms retrieved successfully"),
+            @ApiResponse(responseCode = "400", description = "Invalid request parameters")
+    })
+    @GetMapping({"/search", "/available"})
     public ResponseEntity<List<RoomResponseDto>> searchRooms(
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,

@@ -7,9 +7,11 @@ import com.hotelbooking.platform.dto.request.RebookRequest;
 import com.hotelbooking.platform.dto.response.BookingResponseDto;
 import com.hotelbooking.platform.entities.AppUser;
 import com.hotelbooking.platform.entities.Role;
-import com.hotelbooking.platform.dto.response.BookingResponseDto;
-import com.hotelbooking.platform.entities.AppUser;
 import com.hotelbooking.platform.services.BookingService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -18,6 +20,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+@Tag(name = "Bookings", description = "Booking management endpoints")
 @RestController
 @RequestMapping("/api/bookings")
 public class BookingController {
@@ -28,6 +31,11 @@ public class BookingController {
         this.bookingService = bookingService;
     }
 
+    @Operation(summary = "Create a new booking")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "201", description = "Booking created successfully"),
+            @ApiResponse(responseCode = "400", description = "Invalid request payload")
+    })
     @PostMapping
     public ResponseEntity<BookingResponseDto> createBooking(
             @Valid @RequestBody BookingRequestDto dto,
@@ -35,6 +43,19 @@ public class BookingController {
         Long realUserId = currentUser.getId();
         BookingResponseDto response = bookingService.createBooking(realUserId, dto.roomId(), dto.startDate(), dto.endDate());
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    @Operation(summary = "Get booking by ID")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Booking retrieved successfully"),
+            @ApiResponse(responseCode = "404", description = "Booking not found")
+    })
+    @GetMapping("/{id}")
+    public ResponseEntity<BookingResponseDto> getBookingById(
+            @PathVariable Long id,
+            @AuthenticationPrincipal AppUser currentUser
+    ) {
+        return ResponseEntity.ok(bookingService.getBookingById(id, currentUser));
     }
 
     @GetMapping("/my")

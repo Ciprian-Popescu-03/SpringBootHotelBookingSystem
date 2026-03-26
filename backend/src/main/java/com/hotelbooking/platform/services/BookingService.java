@@ -166,6 +166,13 @@ public class BookingService {
     }
 
     @Transactional(readOnly = true)
+    public BookingResponseDto getBookingById(Long bookingId, AppUser currentUser) {
+        Booking booking = findBookingById(bookingId);
+        ensureOwnerOrAdmin(currentUser, booking);
+        return bookingMapper.toResponseDto(booking);
+    }
+
+    @Transactional(readOnly = true)
     public List<BookingResponseDto> getMyBookings(Long userId) {
         return bookingRepository.findByUserId(userId)
                 .stream()
