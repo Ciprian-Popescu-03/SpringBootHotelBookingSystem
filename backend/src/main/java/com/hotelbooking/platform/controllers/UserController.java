@@ -1,6 +1,7 @@
 package com.hotelbooking.platform.controllers;
 
 import com.hotelbooking.platform.dto.request.CreateUserRequest;
+import com.hotelbooking.platform.dto.request.ChangePasswordRequest;
 import com.hotelbooking.platform.dto.request.UpdateProfileRequest;
 import com.hotelbooking.platform.dto.request.UpdateUserRequest;
 import com.hotelbooking.platform.dto.request.UpdateUserRoleRequest;
@@ -34,6 +35,15 @@ public class UserController {
             @Valid @RequestBody UpdateProfileRequest request
     ) {
         return ResponseEntity.ok(userService.updateCurrentUserProfile(authentication.getName(), request));
+    }
+
+    @PutMapping("/me/password")
+    public ResponseEntity<Void> changeMyPassword(
+            Authentication authentication,
+            @Valid @RequestBody ChangePasswordRequest request
+    ) {
+        userService.changeMyPassword(authentication.getName(), request);
+        return ResponseEntity.noContent().build();
     }
 
     @PostMapping

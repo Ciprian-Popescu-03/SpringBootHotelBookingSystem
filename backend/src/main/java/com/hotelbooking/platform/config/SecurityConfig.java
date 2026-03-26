@@ -1,11 +1,13 @@
-package com.hotelbooking.platform.security;
+package com.hotelbooking.platform.config;
 
+import com.hotelbooking.platform.security.AuthRateLimitFilter;
+import com.hotelbooking.platform.security.JwtAuthenticationFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.http.HttpMethod;
+import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -21,7 +23,7 @@ import java.util.List;
 @Configuration
 @EnableWebSecurity
 @RequiredArgsConstructor
-public class SecurityConfiguration {
+public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthFilter;
     private final AuthRateLimitFilter authRateLimitFilter;
@@ -44,6 +46,10 @@ public class SecurityConfiguration {
                         .requestMatchers("/error").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/users/me").authenticated()
                         .requestMatchers(HttpMethod.PUT, "/api/users/profile").authenticated()
+                        .requestMatchers(HttpMethod.PUT, "/api/users/me/password").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/bookings").hasAuthority("ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/api/bookings/upcoming").hasAuthority("ADMIN")
+                        .requestMatchers(HttpMethod.PATCH, "/api/bookings/*/reassign-room").hasAuthority("ADMIN")
                         .requestMatchers(HttpMethod.POST, "/api/rooms/**").hasAuthority("ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/api/rooms/**").hasAuthority("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/api/rooms/**").hasAuthority("ADMIN")

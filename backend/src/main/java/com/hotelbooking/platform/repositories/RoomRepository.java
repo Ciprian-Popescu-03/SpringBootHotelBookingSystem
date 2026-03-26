@@ -21,15 +21,19 @@ public interface RoomRepository extends JpaRepository<Room, Long> {
     @Query("SELECT r FROM Room r WHERE NOT EXISTS (" +
             "SELECT b FROM Booking b WHERE b.room = r " +
             "AND b.startDate < :endDate AND b.endDate > :startDate " +
-            "AND b.status <> :excludedStatus) " +
+            "AND b.status IN :blockingStatuses) " +
             "AND (:roomType IS NULL OR r.roomType = :roomType) " +
-            "AND (:capacity IS NULL OR r.capacity >= :capacity)")
+            "AND (:capacity IS NULL OR r.capacity >= :capacity) " +
+            "AND (:minPrice IS NULL OR r.pricePerNight >= :minPrice) " +
+            "AND (:maxPrice IS NULL OR r.pricePerNight <= :maxPrice)")
     List<Room> findAvailableRooms(
             @Param("startDate") LocalDate startDate,
             @Param("endDate") LocalDate endDate,
             @Param("roomType") String roomType,
             @Param("capacity") Integer capacity,
-            @Param("excludedStatus") BookingStatus excludedStatus
+            @Param("minPrice") Double minPrice,
+            @Param("maxPrice") Double maxPrice,
+            @Param("blockingStatuses") List<BookingStatus> blockingStatuses
     );
 
     Page<Room> findByRoomType(String type, Pageable pageable);

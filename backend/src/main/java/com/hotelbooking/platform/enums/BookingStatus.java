@@ -8,6 +8,16 @@ public enum BookingStatus {
     ACTIVE("ACTIVE"),
 
     /**
+     * Booking was confirmed.
+     */
+    CONFIRMED("CONFIRMED"),
+
+    /**
+     * Guest check-in.
+     */
+    CHECKED_IN("CHECKED_IN"),
+
+    /**
      * Booking has been cancelled.
      */
     CANCELLED("CANCELLED"),

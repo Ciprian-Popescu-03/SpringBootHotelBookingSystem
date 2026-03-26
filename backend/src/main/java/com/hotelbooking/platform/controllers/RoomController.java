@@ -66,12 +66,30 @@ public class RoomController {
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
             @RequestParam(required = false) String roomType,
-            @RequestParam(required = false) Integer capacity
+            @RequestParam(required = false) Integer capacity,
+            @RequestParam(required = false) Double minPrice,
+            @RequestParam(required = false) Double maxPrice
     ) {
         if (!startDate.isBefore(endDate)) {
             return ResponseEntity.badRequest().build();
         }
-        List<RoomResponseDto> availableRooms = roomService.searchAvailableRooms(startDate, endDate, roomType, capacity);
+        if (minPrice != null && minPrice < 0) {
+            return ResponseEntity.badRequest().build();
+        }
+        if (maxPrice != null && maxPrice < 0) {
+            return ResponseEntity.badRequest().build();
+        }
+        if (minPrice != null && maxPrice != null && minPrice > maxPrice) {
+            return ResponseEntity.badRequest().build();
+        }
+        List<RoomResponseDto> availableRooms = roomService.searchAvailableRooms(
+                startDate,
+                endDate,
+                roomType,
+                capacity,
+                minPrice,
+                maxPrice
+        );
 
         return ResponseEntity.ok(availableRooms);
     }

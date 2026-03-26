@@ -8,6 +8,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
+import java.util.Collection;
 import java.util.List;
 
 @Repository
@@ -17,16 +18,32 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
     @Query("SELECT COUNT(b) > 0 FROM Booking b WHERE b.room.id = :roomId " +
             "AND b.startDate < :requestedEnd " +
             "AND b.endDate > :requestedStart " +
-            "AND b.status <> :excludedStatus")
+            "AND b.status IN :blockingStatuses")
     boolean existsOverlappingBooking(
             @Param("roomId") Long roomId,
             @Param("requestedStart") LocalDate requestedStart,
             @Param("requestedEnd") LocalDate requestedEnd,
-            @Param("excludedStatus") BookingStatus excludedStatus
+            @Param("blockingStatuses") Collection<BookingStatus> blockingStatuses
+    );
+
+    @Query("SELECT COUNT(b) > 0 FROM Booking b WHERE b.room.id = :roomId " +
+            "AND b.id <> :bookingId " +
+            "AND b.startDate < :requestedEnd " +
+            "AND b.endDate > :requestedStart " +
+            "AND b.status IN :blockingStatuses")
+    boolean existsOverlappingBookingExcludingBooking(
+            @Param("roomId") Long roomId,
+            @Param("bookingId") Long bookingId,
+            @Param("requestedStart") LocalDate requestedStart,
+            @Param("requestedEnd") LocalDate requestedEnd,
+            @Param("blockingStatuses") Collection<BookingStatus> blockingStatuses
     );
 
     // Required for the "GET /bookings/my" endpoint
     List<Booking> findByUserId(Long userId);
+    List<Booking> findByUserIdOrderByStartDateDesc(Long userId);
+    List<Booking> findAllByOrderByStartDateAsc();
+    List<Booking> findAllByUserIdAndStartDateGreaterThanEqualOrderByStartDateAsc(Long userId, LocalDate currentDate);
 
     // Required for the "Admin" upcoming bookings requirement
     List<Booking> findAllByStartDateGreaterThanEqual(LocalDate currentDate);

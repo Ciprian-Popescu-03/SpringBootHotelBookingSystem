@@ -1,0 +1,15 @@
+databaseChangeLog:
+  - changeSet:
+      id: 003-update-bookings-status-constraint
+      author: codex
+      preConditions:
+        - onFail: MARK_RAN
+        - onError: MARK_RAN
+        - sqlCheck:
+            expectedResult: "1"
+            sql: SELECT COUNT(*) FROM pg_constraint WHERE conname = 'ck_bookings_status'
+      changes:
+        - sql:
+            sql: ALTER TABLE bookings DROP CONSTRAINT ck_bookings_status
+        - sql:
+            sql: ALTER TABLE bookings ADD CONSTRAINT ck_bookings_status CHECK (status in ('ACTIVE','CONFIRMED','CHECKED_IN','CANCELLED','COMPLETED'))

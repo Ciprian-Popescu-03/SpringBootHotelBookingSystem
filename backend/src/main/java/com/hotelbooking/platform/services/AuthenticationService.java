@@ -8,6 +8,11 @@ import com.hotelbooking.platform.mappers.AuthenticationMapper;
 import com.hotelbooking.platform.mappers.UserMapper;
 import com.hotelbooking.platform.repositories.UserRepository;
 import com.hotelbooking.platform.security.JwtService;
+import com.hotelbooking.platform.security.LoginAttemptService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -27,6 +32,7 @@ public class AuthenticationService {
     private final AuthenticationManager authenticationManager;
     private final UserMapper userMapper;
     private final AuthenticationMapper authenticationMapper;
+    private final LoginAttemptService loginAttemptService;
 
     public AuthenticationResponse register(RegisterRequest request) {
         var existingUser = repository.findByEmail(request.email());
@@ -42,15 +48,30 @@ public class AuthenticationService {
     }
 
     public AuthenticationResponse authenticate(AuthenticationRequest request) {
-        Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(
-                        request.email(),
-                        request.password()
-                )
-        );
-        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
-        var jwtToken = jwtService.generateToken(userDetails);
-        return authenticationMapper.toAuthenticationResponse(jwtToken);
+        String email = request.email();
+
+        if (loginAttemptService.isBlocked(email)) {
+            throw new ResponseStatusException(HttpStatus.LOCKED, "Account is temporarily locked due to too many failed login attempts. Please try again later.");
+        }
+
+        try {
+            Authentication authentication = authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(
+                            email,
+                            request.password()
+                    )
+            );
+
+            loginAttemptService.loginSucceeded(email);
+
+            UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+            var jwtToken = jwtService.generateToken(userDetails);
+            return authenticationMapper.toAuthenticationResponse(jwtToken);
+
+        } catch (BadCredentialsException ex) {
+            loginAttemptService.loginFailed(email);
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid credentials");
+        }
     }
 
     public void logout(String authorizationHeader) {

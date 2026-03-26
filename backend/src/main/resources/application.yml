@@ -27,6 +27,12 @@ application:
     allowed-methods: ${CORS_ALLOWED_METHODS:GET,POST,PUT,DELETE,PATCH,OPTIONS}
     allowed-headers: ${CORS_ALLOWED_HEADERS:Authorization,Content-Type}
   security:
+    login-attempt:
+      max-attempts: ${LOGIN_ATTEMPT_MAX_ATTEMPTS:5}
+      attempt-window-seconds: ${LOGIN_ATTEMPT_WINDOW_SECONDS:60}
+      lock-duration-seconds: ${LOGIN_ATTEMPT_LOCK_DURATION_SECONDS:60}
+      stale-entry-ttl-seconds: ${LOGIN_ATTEMPT_STALE_ENTRY_TTL_SECONDS:300}
+      cleanup-interval-ms: ${LOGIN_ATTEMPT_CLEANUP_INTERVAL_MS:60000}
     rate-limit:
       auth:
         max-attempts: ${AUTH_RATE_LIMIT_MAX_ATTEMPTS:10}

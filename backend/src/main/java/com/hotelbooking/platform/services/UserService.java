@@ -1,6 +1,7 @@
 package com.hotelbooking.platform.services;
 
 import com.hotelbooking.platform.dto.request.CreateUserRequest;
+import com.hotelbooking.platform.dto.request.ChangePasswordRequest;
 import com.hotelbooking.platform.dto.request.UpdateProfileRequest;
 import com.hotelbooking.platform.dto.request.UpdateUserRequest;
 import com.hotelbooking.platform.dto.request.UpdateUserRoleRequest;
@@ -47,6 +48,20 @@ public class UserService {
         } catch (DataIntegrityViolationException ex) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Email already in use", ex);
         }
+    }
+
+    @Transactional
+    public void changeMyPassword(String email, ChangePasswordRequest request) {
+        var user = repository.findByEmail(email)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+        if (!passwordEncoder.matches(request.currentPassword(), user.getPassword())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Current password is invalid");
+        }
+        if (request.currentPassword().equals(request.newPassword())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "New password must be different from current password");
+        }
+        user.setPassword(passwordEncoder.encode(request.newPassword()));
+        repository.save(user);
     }
 
     @Transactional

@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -103,8 +104,23 @@ public class RoomService {
     }
 
     @Transactional(readOnly = true)
-    public List<RoomResponseDto> searchAvailableRooms(LocalDate startDate, LocalDate endDate, String roomType, Integer capacity) {
-        List<Room> rooms = roomRepository.findAvailableRooms(startDate, endDate, roomType, capacity, BookingStatus.CANCELLED);
+    public List<RoomResponseDto> searchAvailableRooms(
+            LocalDate startDate,
+            LocalDate endDate,
+            String roomType,
+            Integer capacity,
+            Double minPrice,
+            Double maxPrice
+    ) {
+        List<Room> rooms = roomRepository.findAvailableRooms(
+                startDate,
+                endDate,
+                roomType,
+                capacity,
+                minPrice,
+                maxPrice,
+                Arrays.asList(BookingStatus.ACTIVE, BookingStatus.CONFIRMED, BookingStatus.CHECKED_IN)
+        );
         return rooms.stream().map(roomMapper::toResponseDto).collect(Collectors.toList());
     }
 }
