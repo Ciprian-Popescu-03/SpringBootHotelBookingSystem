@@ -10,6 +10,8 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.server.ResponseStatusException;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.dao.DataIntegrityViolationException;
 
 import java.time.Instant;
 import java.util.Map;
@@ -47,6 +49,18 @@ public class ApiExceptionHandler {
     @ExceptionHandler(RoomNotFoundException.class)
     public ProblemDetail handleRoomNotFound(RoomNotFoundException ex, HttpServletRequest request) {
         return createProblem(HttpStatus.NOT_FOUND, ex.getMessage(), request);
+    }
+
+    // fixes the 500 on wrong login and returns 401 Unauthorized
+    @ExceptionHandler(BadCredentialsException.class)
+    public ProblemDetail handleBadCredentials(BadCredentialsException ex, HttpServletRequest request) {
+        return createProblem(HttpStatus.UNAUTHORIZED, "Invalid email or password", request);
+    }
+
+    // fixes the 500 on duplicate room numbers and returns 409 Conflict
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ProblemDetail handleDataIntegrityViolation(DataIntegrityViolationException ex, HttpServletRequest request) {
+        return createProblem(HttpStatus.CONFLICT, "Data conflict: A resource with this unique value (e.g., room number) already exists", request);
     }
 
     @ExceptionHandler(Exception.class)
